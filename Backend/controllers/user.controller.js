@@ -39,7 +39,7 @@ export const userController = {
     }
   },
 
-  getAllUser: async (res) => {
+  getAllUser: async (req, res) => {
     try {
       const allUser = await User.find();
       res.json(allUser);

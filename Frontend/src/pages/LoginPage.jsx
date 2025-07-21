@@ -1,9 +1,40 @@
+import axios from "axios";
 import { X } from "lucide-react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const LoginPage = () => {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(true);
+  const navigate = useNavigate();
+
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+
+  const [errorMsg, setErrorMsg] = useState("");
+
+  const handleChange = (e) => {
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
+  const handelSubmit = async (e) => {
+    e.preventDefault();
+    setErrorMsg("");
+
+    try {
+      const res = await axios.get(
+        "http://localhost:5000/api/auth/user",
+        formData
+      );
+      localStorage.setItem("token", res.data.token);
+      navigate("/");
+    } catch (error) {
+      console.error("Login failed", error.response?.data || error.message);
+    }
+  };
   return (
     <>
       {isLoginModalOpen && (
@@ -24,13 +55,16 @@ const LoginPage = () => {
                 </Link>
               </div>
 
-              <form className="space-y-4">
+              <form className="space-y-4" onSubmit={handelSubmit}>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Email
                   </label>
                   <input
                     type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
                     className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                     placeholder="Enter your email"
                   />
@@ -41,9 +75,15 @@ const LoginPage = () => {
                   </label>
                   <input
                     type="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
                     className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                     placeholder="Enter your password"
                   />
+                  {errorMsg && (
+                    <p className="text-red-500 text-sm mb-2">{errorMsg}</p>
+                  )}
                 </div>
                 <div className="flex items-center justify-between">
                   <label className="flex items-center">
@@ -73,12 +113,12 @@ const LoginPage = () => {
               <div className="mt-6 text-center">
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   Don't have an account?{" "}
-                  <a
-                    href="#"
+                  <Link
+                    to={"/signup"}
                     className="text-red-500 hover:text-red-600 font-semibold"
                   >
-                    Sign up
-                  </a>
+                    Sign-up
+                  </Link>
                 </p>
               </div>
             </div>

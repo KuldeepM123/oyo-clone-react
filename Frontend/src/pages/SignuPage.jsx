@@ -1,9 +1,49 @@
-import { X } from "lucide-react";
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import axios from "axios"; // For sending HTTP requests
+import { useState } from "react"; // React hook for managing component state
+import { X } from "lucide-react"; // Close icon from Lucide icons
+import { Link, useNavigate } from "react-router-dom"; // Routing and navigation 
 
 const SignupPage = () => {
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(true);
+  const navigate = useNavigate(); // ✅Hook to programmatically navigate between routes
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(true); // Controls visibility of the signup modal
+
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+  }); // State to store form input values
+
+  const [loading, setLoading] = useState(false); // State to show loading status during signup request
+  const [errorMsg, setErrorMsg] = useState(""); // State to show error message if signup fails
+
+  const handleChange = (e) => {
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value, // Dynamically update input field based on "name" attribute
+    }));
+  }; // Updates form input values on change
+
+  const handleSubmit = async (e) => {  // Called when the form is submitted
+    e.preventDefault(); // Prevents default form reload behavior
+    setLoading(true); // Show loading spinner or disable button
+    setErrorMsg(""); // Clear any previous error messages
+
+    try {
+      const res = await axios.post( // Send a POST request to backend to register user
+        "http://localhost:5000/api/auth/user", // Backend signup endpoint
+        formData
+      );
+      console.log("Signup successful:", res.data);
+      setIsLoginModalOpen(false); // Hide modal after successful signup
+      navigate("/login"); // ✅ navigate to home page
+    } catch (error) {
+      console.error("Signup failed:", error.response?.data || error.message);  // Log and show the error if signup fails
+      setErrorMsg(error.response?.data?.message || "Signup failed. Try again.");
+    } finally {
+      setLoading(false); // Always stop loading, success or error
+    }
+  };
+
   return (
     <>
       {isLoginModalOpen && (
@@ -14,7 +54,6 @@ const SignupPage = () => {
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                   Sign up
                 </h2>
-
                 <Link
                   to={"/"}
                   onClick={() => setIsLoginModalOpen(false)}
@@ -24,7 +63,7 @@ const SignupPage = () => {
                 </Link>
               </div>
 
-              <form className="space-y-4">
+              <form className="space-y-4" onSubmit={handleSubmit}>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Full Name
@@ -33,6 +72,10 @@ const SignupPage = () => {
                     type="text"
                     className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                     placeholder="Enter your fullname"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    required
                   />
                 </div>
                 <div>
@@ -43,6 +86,10 @@ const SignupPage = () => {
                     type="email"
                     className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                     placeholder="Enter your email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
                   />
                 </div>
                 <div>
@@ -53,13 +100,25 @@ const SignupPage = () => {
                     type="password"
                     className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                     placeholder="Enter your password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
                   />
                 </div>
+
+                {errorMsg && (
+                  <p className="text-sm text-red-500 font-semibold">
+                    {errorMsg}
+                  </p>
+                )}
+
                 <button
                   type="submit"
+                  disabled={loading}
                   className="w-full bg-red-500 text-white py-3 rounded-lg hover:bg-red-600 transition-colors font-semibold"
                 >
-                  Signup
+                  {loading ? "Signing up..." : "Signup"}
                 </button>
               </form>
 

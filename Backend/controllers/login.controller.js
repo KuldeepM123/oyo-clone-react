@@ -8,9 +8,12 @@ dotenv.config();
 export const loginController = {
   login: async (req, res) => {
     try {
-      const { username, password } = req.body;
-      const user = await User.findOne({ username });
+      const { email, password } = req.body;
+      if (!email || !password) {
+        return res.status(400).json({ message: "All field are required" });
+      }
 
+      const user = await User.findOne({ email });
       if (!user) {
         return res
           .status(401)
@@ -23,11 +26,10 @@ export const loginController = {
           .status(401)
           .json({ message: "Invalid username or password" });
       }
-
       const token = jwt.sign(
         process.env.JWT_SECRET,
-        { id: user._id, username: user.username },
-        { algorithm: "HS256", expiresIn: "1h" }
+        { userId: user._id },
+        { expiresIn: "1d" }
       );
       res
         .cookie("access_token", token, {
